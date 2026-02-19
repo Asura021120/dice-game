@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Dice Solver Pro - Logic Optimized</title>
+    <title>Dice Solver Pro - Precision Edition</title>
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --accent: #ff4757; --green: #2ed573; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
@@ -12,7 +12,6 @@
         .setting-item { display: flex; flex-direction: column; gap: 5px; color: #888; font-size: 0.85rem; }
         select { background: #2a2a2a; color: white; border: 1px solid #444; padding: 8px; border-radius: 10px; cursor: pointer; }
 
-        /* 穩定 Input 區域 */
         #dice-area { 
             display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; 
             margin: 25px 0; padding: 20px; background: rgba(0,0,0,0.2); 
@@ -42,17 +41,17 @@
     <h1 style="color:var(--accent); margin:0 0 20px 0;">🎲 Dice Solver Pro</h1>
 
     <div class="settings">
-        <div class="setting-item"><span>數量</span><select id="n-select" onchange="refresh()"><option>3</option><option>4</option><option selected>5</option><option>6</option></select></div>
-        <div class="setting-item"><span>顯示上限</span><select id="limit-select"><option value="5">5 種</option><option value="10">10 種</option><option value="999">不限</option></select></div>
+        <div class="setting-item"><span>數量 (強制 1-6)</span><select id="n-select" onchange="refresh()"><option>3</option><option>4</option><option selected>5</option><option>6</option></select></div>
+        <div class="setting-item"><span>顯示上限</span><select id="limit-select"><option value="5">5 種</option><option value="999">不限</option></select></div>
     </div>
 
     <div id="dice-area">
-        <div class="dice-wrap" id="w0"><input type="number" class="dice-input" value="1"></div>
-        <div class="dice-wrap" id="w1"><input type="number" class="dice-input" value="2"></div>
-        <div class="dice-wrap" id="w2"><input type="number" class="dice-input" value="3"></div>
-        <div class="dice-wrap" id="w3"><input type="number" class="dice-input" value="4"></div>
-        <div class="dice-wrap" id="w4"><input type="number" class="dice-input" value="5"></div>
-        <div class="dice-wrap" id="w5"><input type="number" class="dice-input" value="6"></div>
+        <div class="dice-wrap" id="w0"><input type="number" class="dice-input" value="1" min="1" max="6"></div>
+        <div class="dice-wrap" id="w1"><input type="number" class="dice-input" value="2" min="1" max="6"></div>
+        <div class="dice-wrap" id="w2"><input type="number" class="dice-input" value="3" min="1" max="6"></div>
+        <div class="dice-wrap" id="w3"><input type="number" class="dice-input" value="4" min="1" max="6"></div>
+        <div class="dice-wrap" id="w4"><input type="number" class="dice-input" value="5" min="1" max="6"></div>
+        <div class="dice-wrap" id="w5"><input type="number" class="dice-input" value="6" min="1" max="6"></div>
     </div>
 
     <input type="number" id="target" value="24">
@@ -66,19 +65,18 @@
         for(let i=0; i<6; i++) document.getElementById('w'+i).style.display = (i < n) ? 'block' : 'none';
     }
 
-    let found = new Map(); // 使用 Map 存儲「規範化算式」作為 Key 來去重
+    let found = new Map();
     let max;
 
-    // 規範化函數：處理交換律 (A+B -> B+A)
     function normalize(expr) {
-        // 這是一個簡化的邏輯：移除括號並排序內容來判斷邏輯是否一致
         return expr.replace(/\(|\)/g, '').split('').sort().join('');
     }
 
     function solve(items, target) {
         if (found.size >= max) return;
         if (items.length === 1) {
-            if (Math.abs(items[0].v - target) < 0.001) {
+            // 極限精確度校正：使用 1e-10 避免偽正解
+            if (Math.abs(items[0].v - target) < 0.0000000001) {
                 const norm = normalize(items[0].e);
                 if (!found.has(norm)) found.set(norm, items[0].e);
             }
@@ -89,10 +87,8 @@
                 if (i === j) continue;
                 const a = items[i], b = items[j], rem = items.filter((_, idx) => idx !== i && idx !== j);
                 const ops = [
-                    {o:'+', v:a.v+b.v},
-                    {o:'*', v:a.v*b.v},
-                    {o:'-', v:a.v-b.v},
-                    {o:'/', v:b.v!==0 ? a.v/b.v : null}
+                    {o:'+', v:a.v+b.v}, {o:'*', v:a.v*b.v},
+                    {o:'-', v:a.v-b.v}, {o:'/', v:Math.abs(b.v) > 0.0000000001 ? a.v/b.v : null}
                 ];
                 for (let o of ops) {
                     if (o.v !== null) solve([...rem, {v:o.v, e:`(${a.e}${o.o}${b.e})`}], target);
@@ -119,8 +115,14 @@
         max = parseInt(document.getElementById('limit-select').value);
         const tar = parseFloat(document.getElementById('target').value);
         const nums = [];
+        const inputs = document.querySelectorAll('.dice-input');
+        
         for(let i=0; i<n; i++) {
-            const v = parseFloat(document.querySelectorAll('.dice-input')[i].value) || 0;
+            let v = parseInt(inputs[i].value);
+            // 強制修正回 1-6 範圍
+            if (isNaN(v) || v < 1) v = 1;
+            if (v > 6) v = 6;
+            inputs[i].value = v; 
             nums.push({v: v, e: v.toString()});
         }
 
