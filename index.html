@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Dice Solver Pro - 視覺優化版</title>
+    <title>Dice Solver Pro - 完整功能版</title>
     <style>
         :root {
             --bg: #121212;
@@ -11,37 +11,61 @@
             --text: #ffffff;
             --dice-bg: #ffffff;
         }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { background: var(--card); padding: 2rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 600px; text-align: center; border: 1px solid #333; }
-        .header h1 { margin: 0; font-size: 1.8rem; color: var(--accent); }
-        .n-picker { margin: 1.5rem 0; font-size: 0.9rem; color: #aaa; }
-        select { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        #input-area { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 2rem 0; }
+        
+        .header h1 { margin: 0 0 1rem 0; font-size: 1.8rem; color: var(--accent); }
+        .n-picker { margin-bottom: 1.5rem; font-size: 1rem; color: #aaa; }
+        select { background: #333; color: white; border: 1px solid #444; padding: 5px 15px; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+
+        /* 確保骰子區域一定會顯示 */
+        #input-area { 
+            display: flex; 
+            justify-content: center; 
+            gap: 12px; 
+            flex-wrap: wrap; 
+            margin: 2rem 0; 
+            min-height: 70px; /* 防止區域塌陷 */
+        }
+        
         .dice-input {
-            width: 60px; height: 60px; background: var(--dice-bg); color: #333;
-            border-radius: 12px; font-size: 1.8rem; font-weight: bold; text-align: center;
-            border: none; box-shadow: inset -4px -4px 0px #ccc, 4px 4px 15px rgba(0,0,0,0.3);
-            outline: none; transition: transform 0.1s;
+            width: 60px; 
+            height: 60px; 
+            background: var(--dice-bg) !important; /* 強制白底 */
+            color: #121212 !important; /* 強制黑字 */
+            border-radius: 12px; 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            text-align: center;
+            border: none; 
+            box-shadow: inset -4px -4px 0px #ccc, 4px 4px 15px rgba(0,0,0,0.4);
+            outline: none; 
+            transition: 0.2s;
+            display: block; /* 確保它是區塊元素 */
         }
-        .dice-input:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--accent); }
-        .target-section { margin-bottom: 2rem; }
+        .dice-input:focus { transform: translateY(-5px); box-shadow: 0 0 20px var(--accent); }
+
+        .target-section { margin-top: 1rem; }
         #target { 
-            background: transparent; border-bottom: 2px solid var(--accent); color: var(--accent);
-            font-size: 2rem; width: 80px; text-align: center; border-top:none; border-left:none; border-right:none;
+            background: transparent; border-bottom: 3px solid var(--accent); color: var(--accent);
+            font-size: 2.5rem; width: 100px; text-align: center; border-top:none; border-left:none; border-right:none;
+            margin-top: 10px; font-weight: bold; outline: none;
         }
+
         button {
-            background: var(--accent); color: white; border: none; padding: 12px 30px;
-            font-size: 1.1rem; font-weight: bold; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 10px 20px rgba(255, 71, 87, 0.3); transition: 0.3s;
+            margin-top: 2rem; background: var(--accent); color: white; border: none; 
+            padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; 
+            cursor: pointer; box-shadow: 0 10px 20px rgba(255, 71, 87, 0.3); transition: 0.3s;
         }
-        button:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(255, 71, 87, 0.4); }
+        button:hover { transform: scale(1.05); background: #ff6b81; }
+
         #result { 
             margin-top: 2rem; padding: 1.5rem; border-radius: 15px; background: #252525;
-            min-height: 80px; font-size: 1.6rem; color: #2ed573; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            word-break: break-all; line-height: 1.5;
+            min-height: 100px; font-size: 1.6rem; color: #2ed573; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center;
+            word-break: break-all; border: 1px dashed #444;
         }
-        .original-expr { font-size: 0.8rem; color: #666; margin-bottom: 8px; }
-        .symbol { color: var(--accent); padding: 0 4px; font-weight: bold; }
+        .original-expr { font-size: 0.85rem; color: #777; margin-bottom: 10px; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -52,7 +76,7 @@
     </div>
 
     <div class="n-picker">
-        數量 n = 
+        骰子數量 (n): 
         <select id="n-select" onchange="generateInputs()">
             <option value="3">3</option><option value="4">4</option>
             <option value="5" selected>5</option><option value="6">6</option>
@@ -63,67 +87,35 @@
     <div id="input-area"></div>
 
     <div class="target-section">
-        <p style="color:#888; margin-bottom: 5px;">TARGET X</p>
+        <p style="color:#888; margin: 0;">TARGET X</p>
         <input type="number" id="target" value="24">
     </div>
 
     <button onclick="crack()">SOLVE NOW</button>
 
-    <div id="result">準備就緒...</div>
+    <div id="result">輸入數字後點擊按鈕...</div>
 </div>
 
 <script>
-    window.onload = generateInputs;
+    // 初始化生成
+    window.onload = function() {
+        generateInputs();
+    };
 
     function generateInputs() {
         const n = parseInt(document.getElementById('n-select').value);
         const area = document.getElementById('input-area');
-        area.innerHTML = '';
+        area.innerHTML = ''; // 清空
+        
         for (let i = 0; i < n; i++) {
             const input = document.createElement('input');
             input.type = 'number';
             input.className = 'dice-input';
             input.value = Math.floor(Math.random() * 6) + 1;
-            input.oninput = function() {
-                if (this.value > 6) this.value = 6;
-                if (this.value < 1 && this.value !== "") this.value = 1;
-            };
+            input.min = 1; 
+            input.max = 99; // 雖說是骰子，但給你彈性輸入大一點
             area.appendChild(input);
         }
     }
 
-    // 核心解題邏輯 (回到最初最穩定的版本：全括號)
-    function solve(items, target) {
-        if (items.length === 1) {
-            return Math.abs(items[0].val - target) < 0.0001 ? items[0].expr : null;
-        }
-        for (let i = 0; i < items.length; i++) {
-            for (let j = 0; j < items.length; j++) {
-                if (i === j) continue;
-                const a = items[i], b = items[j];
-                const remaining = items.filter((_, idx) => idx !== i && idx !== j);
-                const ops = [
-                    { op: '+', val: a.val + b.val },
-                    { op: '-', val: a.val - b.val },
-                    { op: '*', val: a.val * b.val },
-                    { op: '/', val: b.val !== 0 ? a.val / b.val : null }
-                ];
-                for (let o of ops) {
-                    if (o.val === null) continue;
-                    // 一律包括號，確保運算絕對正確
-                    const res = solve([...remaining, { val: o.val, expr: `(${a.expr}${o.op}${b.expr})` }], target);
-                    if (res) return res;
-                }
-            }
-        }
-        return null;
-    }
-
-    // 格式化函數：將一堆括號的算式轉換成人類易讀版
-    function cleanExpression(expr) {
-        // 簡單替換符號
-        let res = expr.replace(/\*/g, ' × ').replace(/\//g, ' ÷ ');
-        
-        // 數學規則去括號邏輯
-        // 這是一個簡化版的去括號：如果括號內只有加減，外面是乘除，則保留；否則嘗試去除
-        // 為了確保萬無一失，
+    const precedence = { '+':
