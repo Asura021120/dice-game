@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>高級骰子數學破解器</title>
+    <title>Dice Solver Pro - 修復版</title>
     <style>
         :root {
             --bg: #121212;
@@ -16,9 +16,8 @@
         
         .header h1 { margin: 0; font-size: 1.8rem; color: var(--accent); }
         .n-picker { margin: 1.5rem 0; font-size: 0.9rem; color: #aaa; }
-        select { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; }
+        select { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
 
-        /* 骰子樣式 */
         #input-area { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 2rem 0; }
         .dice-input {
             width: 60px; height: 60px; background: var(--dice-bg); color: #333;
@@ -44,8 +43,8 @@
         #result { 
             margin-top: 2rem; padding: 1.5rem; border-radius: 15px; background: #252525;
             min-height: 60px; font-size: 1.3rem; color: #2ed573; display: flex; align-items: center; justify-content: center;
+            word-break: break-all;
         }
-        .math-symbol { color: var(--accent); font-weight: bold; margin: 0 3px; }
     </style>
 </head>
 <body>
@@ -88,8 +87,6 @@
             input.type = 'number';
             input.className = 'dice-input';
             input.value = Math.floor(Math.random() * 6) + 1;
-            input.min = 1; input.max = 6;
-            // 限制只能輸入 1-6
             input.oninput = function() {
                 if (this.value > 6) this.value = 6;
                 if (this.value < 1 && this.value !== "") this.value = 1;
@@ -98,74 +95,25 @@
         }
     }
 
-    // 優先級定義：+,- 為 1, *,/ 為 2
     const precedence = { '+': 1, '-': 1, '*': 2, '/': 2 };
 
     function crack() {
-        const n = parseInt(document.getElementById('n-select').value);
         const target = parseFloat(document.getElementById('target').value);
         const display = document.getElementById('result');
         const nums = [];
         
-        const inputs = document.querySelectorAll('.dice-input');
-        inputs.forEach(input => {
+        document.querySelectorAll('.dice-input').forEach(input => {
             const v = parseFloat(input.value) || 1;
-            nums.push({ val: v, expr: v.toString(), p: 9 }); // 單一數字優先級最高(9)
+            nums.push({ val: v, expr: v.toString(), p: 9 });
         });
 
-        display.innerHTML = '<span style="color:#aaa">思考中...</span>';
+        display.innerHTML = '<span style="color:#aaa">正在解算...</span>';
 
         setTimeout(() => {
-            const solution = solve(nums, target);
-            if (solution) {
-                // 美化算式符號
-                const pretty = solution.expr.replace(/\*/g, '×').replace(/\//g, '÷');
+            const resultObj = solve(nums, target);
+            if (resultObj) {
+                // 將 * 改為 ×，/ 改為 ÷ 增加可讀性
+                const pretty = resultObj.expr.replace(/\*/g, '×').replace(/\//g, '÷');
                 display.innerHTML = pretty;
             } else {
-                display.innerHTML = '<span style="color:#ff4757">此組無解</span>';
-            }
-        }, 50);
-    }
-
-    function solve(items, target) {
-        if (items.length === 1) {
-            return Math.abs(items[0].val - target) < 0.0001 ? items : null;
-        }
-
-        for (let i = 0; i < items.length; i++) {
-            for (let j = 0; j < items.length; j++) {
-                if (i === j) continue;
-
-                const remaining = items.filter((_, idx) => idx !== i && idx !== j);
-                const a = items[i], b = items[j];
-
-                const ops = [
-                    { op: '+', val: a.val + b.val },
-                    { op: '-', val: a.val - b.val },
-                    { op: '*', val: a.val * b.val },
-                    { op: '/', val: a.val / b.val }
-                ];
-
-                for (let o of ops) {
-                    if (o.op === '/' && Math.abs(b.val) < 0.0001) continue;
-
-                    // 括號邏輯：如果子運算優先級低於當前運算，則加括號
-                    let strA = a.p < precedence[o.op] ? `(${a.expr})` : a.expr;
-                    // 減法與除法右側若優先級相同也建議加括號，避免 8-(3-2) 變成 8-3-2 的邏輯錯誤
-                    let strB = b.p <= precedence[o.op] ? `(${b.expr})` : b.expr;
-
-                    const res = solve([...remaining, {
-                        val: o.val,
-                        expr: `${strA}${o.op}${strB}`,
-                        p: precedence[o.op]
-                    }], target);
-                    
-                    if (res) return res[0];
-                }
-            }
-        }
-        return null;
-    }
-</script>
-</body>
-</html>
+                display.innerHTML = '<span style="color:#ff4757">此組無解
