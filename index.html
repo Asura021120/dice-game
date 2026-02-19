@@ -2,50 +2,81 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>進階數學遊戲破解器 (n=1~8)</title>
+    <title>高級骰子數學破解器</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 20px; }
-        .box { background: #16213e; padding: 30px; border-radius: 20px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 90%; }
-        .controls { margin-bottom: 20px; border-bottom: 1px solid #0f3460; padding-bottom: 20px; }
-        select { padding: 8px; border-radius: 5px; background: #0f3460; color: white; border: none; font-size: 1rem; }
-        #input-area { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
-        input { width: 60px; height: 50px; font-size: 1.3rem; text-align: center; border-radius: 8px; border: 2px solid #0f3460; background: #1a1a2e; color: #e94560; font-weight: bold; }
-        #target { width: 100px; background: #e94560; color: white; border: none; }
-        button { padding: 12px 40px; font-size: 1.1rem; cursor: pointer; background: #0f3460; color: white; border: 2px solid #e94560; border-radius: 50px; transition: all 0.3s; }
-        button:hover { background: #e94560; transform: translateY(-2px); }
-        #result { margin-top: 30px; font-size: 1.4rem; color: #4ecca3; word-break: break-all; min-height: 50px; line-height: 1.6; }
-        .loading { color: #f1c40f; font-style: italic; }
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --accent: #ff4757;
+            --text: #ffffff;
+            --dice-bg: #ffffff;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card); padding: 2rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 600px; text-align: center; border: 1px solid #333; }
+        
+        .header h1 { margin: 0; font-size: 1.8rem; color: var(--accent); }
+        .n-picker { margin: 1.5rem 0; font-size: 0.9rem; color: #aaa; }
+        select { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; }
+
+        /* 骰子樣式 */
+        #input-area { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 2rem 0; }
+        .dice-input {
+            width: 60px; height: 60px; background: var(--dice-bg); color: #333;
+            border-radius: 12px; font-size: 1.8rem; font-weight: bold; text-align: center;
+            border: none; box-shadow: inset -4px -4px 0px #ccc, 4px 4px 15px rgba(0,0,0,0.3);
+            outline: none; transition: transform 0.1s;
+        }
+        .dice-input:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--accent); }
+
+        .target-section { margin-bottom: 2rem; }
+        #target { 
+            background: transparent; border-bottom: 2px solid var(--accent); color: var(--accent);
+            font-size: 2rem; width: 80px; text-align: center; border-top:none; border-left:none; border-right:none;
+        }
+
+        button {
+            background: var(--accent); color: white; border: none; padding: 12px 30px;
+            font-size: 1.1rem; font-weight: bold; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255, 71, 87, 0.3); transition: 0.3s;
+        }
+        button:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(255, 71, 87, 0.4); }
+
+        #result { 
+            margin-top: 2rem; padding: 1.5rem; border-radius: 15px; background: #252525;
+            min-height: 60px; font-size: 1.3rem; color: #2ed573; display: flex; align-items: center; justify-content: center;
+        }
+        .math-symbol { color: var(--accent); font-weight: bold; margin: 0 3px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <div class="controls">
-        <label>選取骰子數量 (n): </label>
+<div class="container">
+    <div class="header">
+        <h1>🎲 Dice Solver Pro</h1>
+    </div>
+
+    <div class="n-picker">
+        數量 n = 
         <select id="n-select" onchange="generateInputs()">
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5" selected>5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5" selected>5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option>
         </select>
     </div>
 
-    <div id="input-area">
-        </div>
+    <div id="input-area"></div>
 
-    <div>
-        <p>目標數字 X</p>
+    <div class="target-section">
+        <p style="color:#888; margin-bottom: 5px;">TARGET X</p>
         <input type="number" id="target" value="24">
     </div>
-    
-    <button onclick="crack()">立即尋找解法</button>
-    <div id="result"></div>
+
+    <button onclick="crack()">SOLVE NOW</button>
+
+    <div id="result">準備就緒...</div>
 </div>
 
 <script>
-    // 頁面載入時先生成一次輸入框
     window.onload = generateInputs;
 
     function generateInputs() {
@@ -55,72 +86,86 @@
         for (let i = 0; i < n; i++) {
             const input = document.createElement('input');
             input.type = 'number';
-            input.id = 'n' + i;
+            input.className = 'dice-input';
             input.value = Math.floor(Math.random() * 6) + 1;
+            input.min = 1; input.max = 6;
+            // 限制只能輸入 1-6
+            input.oninput = function() {
+                if (this.value > 6) this.value = 6;
+                if (this.value < 1 && this.value !== "") this.value = 1;
+            };
             area.appendChild(input);
         }
     }
 
-    async function crack() {
+    // 優先級定義：+,- 為 1, *,/ 為 2
+    const precedence = { '+': 1, '-': 1, '*': 2, '/': 2 };
+
+    function crack() {
         const n = parseInt(document.getElementById('n-select').value);
         const target = parseFloat(document.getElementById('target').value);
         const display = document.getElementById('result');
         const nums = [];
         
-        for (let i = 0; i < n; i++) {
-            const val = parseFloat(document.getElementById('n'+i).value);
-            if (!isNaN(val)) nums.push({ val: val, expr: val.toString() });
-        }
+        const inputs = document.querySelectorAll('.dice-input');
+        inputs.forEach(input => {
+            const v = parseFloat(input.value) || 1;
+            nums.push({ val: v, expr: v.toString(), p: 9 }); // 單一數字優先級最高(9)
+        });
 
-        display.innerHTML = '<span class="loading">正在深度運算中... (n=' + n + ' 組合較多請稍候)</span>';
+        display.innerHTML = '<span style="color:#aaa">思考中...</span>';
 
-        // 使用 setTimeout 讓 UI 有時間顯示「計算中」
         setTimeout(() => {
-            const startTime = Date.now();
             const solution = solve(nums, target);
-            const endTime = Date.now();
-            
             if (solution) {
-                display.innerHTML = "找到解法了！<br><small style='color:#888'>(耗時 " + (endTime - startTime) + "ms)</small><br><br>" + solution;
+                // 美化算式符號
+                const pretty = solution.expr.replace(/\*/g, '×').replace(/\//g, '÷');
+                display.innerHTML = pretty;
             } else {
-                display.innerText = "這組數字在嚴格規則下無解。";
+                display.innerHTML = '<span style="color:#ff4757">此組無解</span>';
             }
         }, 50);
     }
 
     function solve(items, target) {
         if (items.length === 1) {
-            return Math.abs(items[0].val - target) < 0.0001 ? items[0].expr : null;
+            return Math.abs(items[0].val - target) < 0.0001 ? items : null;
         }
 
         for (let i = 0; i < items.length; i++) {
             for (let j = 0; j < items.length; j++) {
                 if (i === j) continue;
 
-                const remaining = [];
-                for (let k = 0; k < items.length; k++) {
-                    if (k !== i && k !== j) remaining.push(items[k]);
-                }
-                
+                const remaining = items.filter((_, idx) => idx !== i && idx !== j);
                 const a = items[i], b = items[j];
-                const ops = [
-                    { val: a.val + b.val, expr: `(${a.expr}+${b.expr})` },
-                    { val: a.val - b.val, expr: `(${a.expr}-${b.expr})` },
-                    { val: a.val * b.val, expr: `(${a.expr}*${b.expr})` }
-                ];
-                if (Math.abs(b.val) > 0.000001) {
-                    ops.push({ val: a.val / b.val, expr: `(${a.expr}/${b.expr})` });
-                }
 
-                for (let op of ops) {
-                    const res = solve([...remaining, op], target);
-                    if (res) return res;
+                const ops = [
+                    { op: '+', val: a.val + b.val },
+                    { op: '-', val: a.val - b.val },
+                    { op: '*', val: a.val * b.val },
+                    { op: '/', val: a.val / b.val }
+                ];
+
+                for (let o of ops) {
+                    if (o.op === '/' && Math.abs(b.val) < 0.0001) continue;
+
+                    // 括號邏輯：如果子運算優先級低於當前運算，則加括號
+                    let strA = a.p < precedence[o.op] ? `(${a.expr})` : a.expr;
+                    // 減法與除法右側若優先級相同也建議加括號，避免 8-(3-2) 變成 8-3-2 的邏輯錯誤
+                    let strB = b.p <= precedence[o.op] ? `(${b.expr})` : b.expr;
+
+                    const res = solve([...remaining, {
+                        val: o.val,
+                        expr: `${strA}${o.op}${strB}`,
+                        p: precedence[o.op]
+                    }], target);
+                    
+                    if (res) return res[0];
                 }
             }
         }
         return null;
     }
 </script>
-
 </body>
 </html>
