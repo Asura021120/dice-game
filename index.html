@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Dice Solver Pro - Final Solution</title>
+    <title>Dice Solver Pro - Multi-Solution</title>
     <style>
         :root {
             --bg: #121212;
@@ -11,50 +11,49 @@
             --dice-white: #ffffff;
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: var(--card); padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; border: 1px solid #333; }
+        .container { background: var(--card); padding: 2rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 550px; text-align: center; border: 1px solid #333; }
         
         .header h1 { margin: 0 0 1rem 0; font-size: 1.8rem; color: var(--accent); }
-        .n-picker { margin-bottom: 1rem; color: #aaa; }
-        select { background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 8px; cursor: pointer; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 1rem; font-size: 0.9rem; color: #aaa; }
+        .setting-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        
+        select { background: #333; color: white; border: 1px solid #555; padding: 6px 12px; border-radius: 8px; cursor: pointer; width: 80%; }
 
-        /* 骰子容器 */
         #input-area { 
             display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; 
-            margin: 1.5rem 0; padding: 20px; min-height: 80px;
+            margin: 1.5rem 0; padding: 15px; min-height: 80px;
             border: 2px dashed #444; border-radius: 15px; background: rgba(255,255,255,0.02);
         }
         
-        /* 骰子本人：保證看得見 */
         .dice-input {
-            width: 55px; height: 55px; 
-            background-color: white !important; 
-            color: black !important;
-            border-radius: 12px; font-size: 1.6rem; font-weight: bold; 
-            text-align: center; border: 2px solid #fff;
-            box-shadow: 4px 4px 10px rgba(0,0,0,0.5); outline: none;
+            width: 50px; height: 50px; background-color: white !important; color: black !important;
+            border-radius: 12px; font-size: 1.5rem; font-weight: bold; text-align: center;
+            border: 2px solid #fff; box-shadow: 4px 4px 10px rgba(0,0,0,0.5); outline: none;
         }
 
         #target { 
             background: transparent; border: none; border-bottom: 3px solid var(--accent); 
             color: var(--accent); font-size: 2.5rem; width: 100px; text-align: center; 
-            font-weight: bold; outline: none;
+            font-weight: bold; outline: none; margin-top: 5px;
         }
 
         .btn-solve {
-            margin-top: 2rem; background: var(--accent); color: white; border: none; 
-            padding: 15px 50px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; 
+            margin-top: 1.5rem; background: var(--accent); color: white; border: none; 
+            padding: 15px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; 
             cursor: pointer; transition: 0.3s; width: 100%;
         }
-        .btn-solve:active { transform: scale(0.98); }
-
-        .refresh-link { color: #555; font-size: 0.8rem; cursor: pointer; text-decoration: underline; margin-top: 5px; display: block; }
+        .btn-solve:hover { background: #ff6b81; transform: scale(1.02); }
 
         #result { 
-            margin-top: 2rem; padding: 1.5rem; border-radius: 15px; background: #252525;
-            min-height: 80px; font-size: 1.4rem; color: #2ed573; display: flex; 
-            flex-direction: column; align-items: center; justify-content: center;
+            margin-top: 1.5rem; padding: 1rem; border-radius: 15px; background: #252525;
+            max-height: 300px; overflow-y: auto; text-align: left;
         }
-        .original-expr { font-size: 0.75rem; color: #666; margin-bottom: 8px; font-family: monospace; }
+        .solution-item { 
+            padding: 10px; border-bottom: 1px solid #333; color: #2ed573; font-size: 1.1rem;
+        }
+        .solution-item:last-child { border-bottom: none; }
+        .sol-raw { font-size: 0.7rem; color: #666; display: block; margin-bottom: 3px; font-family: monospace; }
+        .no-sol { color: #ff4757; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
@@ -62,34 +61,42 @@
 <div class="container">
     <div class="header"><h1>🎲 Dice Solver Pro</h1></div>
 
-    <div class="n-picker">
-        數量 n = 
-        <select id="n-select" onchange="generateInputs()">
-            <option value="3">3</option><option value="4">4</option>
-            <option value="5" selected>5</option><option value="6">6</option>
-            <option value="7">7</option><option value="8">8</option>
-        </select>
+    <div class="settings-grid">
+        <div class="setting-item">
+            <span>骰子數量 (n)</span>
+            <select id="n-select" onchange="generateInputs()">
+                <option value="3">3</option><option value="4">4</option>
+                <option value="5" selected>5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <span>解法顯示數量</span>
+            <select id="sol-count-select">
+                <option value="1">僅 1 種</option>
+                <option value="3">最多 3 種</option>
+                <option value="5">最多 5 種</option>
+                <option value="999">全部顯示</option>
+            </select>
+        </div>
     </div>
 
     <div id="input-area"></div>
-    <span class="refresh-link" onclick="generateInputs()">骰子沒出現？點我強制整理</span>
 
     <div class="target-section">
-        <p style="color:#888; margin: 10px 0 0 0;">TARGET X</p>
+        <p style="color:#888; margin: 0; font-size: 0.8rem;">TARGET X</p>
         <input type="number" id="target" value="24">
     </div>
 
     <button class="btn-solve" onclick="crack()">SOLVE NOW</button>
 
-    <div id="result">輸入數字後點擊按鈕</div>
+    <div id="result">準備就緒...</div>
 </div>
 
 <script>
-    // 1. 強制生成函數
     function generateInputs() {
         const n = document.getElementById('n-select').value;
         const area = document.getElementById('input-area');
-        console.log("Generating " + n + " dices..."); // 除錯用
         area.innerHTML = ''; 
         for (let i = 0; i < n; i++) {
             const input = document.createElement('input');
@@ -100,9 +107,22 @@
         }
     }
 
-    // 2. 核心邏輯
-    function solveLogic(items, target) {
-        if (items.length === 1) return Math.abs(items[0].val - target) < 0.0001 ? items[0].expr : null;
+    // 全域變數存放找到的解
+    let allSolutions = new Set();
+    let maxSols = 1;
+
+    function solveRecursive(items, target) {
+        // 如果已經找夠了，就停止
+        if (allSolutions.size >= maxSols) return;
+
+        if (items.length === 1) {
+            if (Math.abs(items[0].val - target) < 0.0001) {
+                // 使用 Set 儲存來避免完全相同的算式
+                allSolutions.add(items[0].expr);
+            }
+            return;
+        }
+
         for (let i = 0; i < items.length; i++) {
             for (let j = 0; j < items.length; j++) {
                 if (i === j) continue;
@@ -110,35 +130,14 @@
                 const ops = [{o:'+',v:a.val+b.val},{o:'-',v:a.val-b.val},{o:'*',v:a.val*b.val},{o:'/',v:b.val!==0?a.val/b.val:null}];
                 for (let o of ops) {
                     if (o.v === null) continue;
-                    const res = solveLogic([...rem, {val:o.v, expr:`(${a.expr}${o.o}${b.expr})`}], target);
-                    if (res) return res;
+                    solveRecursive([...rem, {val:o.v, expr:`(${a.expr}${o.o}${b.expr})`}], target);
                 }
             }
         }
-        return null;
     }
 
-    function crack() {
-        const target = parseFloat(document.getElementById('target').value);
-        const display = document.getElementById('result');
-        const nums = [];
-        document.querySelectorAll('.dice-input').forEach(el => {
-            nums.push({ val: parseFloat(el.value), expr: el.value.toString() });
-        });
-        display.innerHTML = '計算中...';
-        setTimeout(() => {
-            const raw = solveLogic(nums, target);
-            if (raw) {
-                const clean = raw.replace(/\*/g,'×').replace(/\//g,'÷');
-                display.innerHTML = `<div class="original-expr">路徑: ${raw}</div><div>${clean} = ${target}</div>`;
-            } else { display.innerHTML = '此組合無解'; }
-        }, 50);
-    }
-
-    // 3. 確保一進來就跑
-    generateInputs();
-    // 額外保險：如果網頁載入慢，過半秒再跑一次
-    setTimeout(generateInputs, 500);
-</script>
-</body>
-</html>
+    function cleanExpression(expr) {
+        let res = expr;
+        if (res.startsWith('(') && res.endsWith(')')) {
+            let balance = 0; let isOuter = true;
+            for (let i = 0; i < res.length
