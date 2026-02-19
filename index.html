@@ -2,45 +2,35 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Dice Solver - Ultimate Stable</title>
+    <title>Dice Solver Pro - Logic Optimized</title>
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --accent: #ff4757; --green: #2ed573; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { background: var(--card); padding: 2rem; border-radius: 30px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #333; }
         
-        /* 設定區 */
         .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .setting-item { display: flex; flex-direction: column; gap: 5px; color: #888; font-size: 0.85rem; }
         select { background: #2a2a2a; color: white; border: 1px solid #444; padding: 8px; border-radius: 10px; cursor: pointer; }
 
-        /* 核心：骰子輸入區 (絕對不消失) */
-        #input-area { 
+        /* 穩定 Input 區域 */
+        #dice-area { 
             display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; 
             margin: 25px 0; padding: 20px; background: rgba(0,0,0,0.2); 
-            border-radius: 20px; min-height: 130px; align-items: center;
+            border-radius: 20px; min-height: 140px; align-items: center;
         }
-        .dice-wrap { width: 55px; height: 55px; } /* 固定容器大小 */
+        .dice-wrap { width: 55px; height: 55px; display: none; }
         .dice-input {
             width: 100%; height: 100%; background: white !important; color: black !important;
             border-radius: 12px; font-size: 1.6rem; font-weight: bold; text-align: center;
             border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); outline: none;
         }
 
-        /* 目標數 */
-        .target-section { margin-bottom: 25px; }
-        #target { 
-            background: transparent; border: none; border-bottom: 4px solid var(--accent);
-            color: var(--accent); font-size: 3rem; width: 100px; text-align: center; font-weight: bold; outline: none;
-        }
-
-        button {
-            width: 100%; padding: 18px; background: var(--accent); color: white; border: none; 
-            border-radius: 50px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
+        #target { background: transparent; border: none; border-bottom: 4px solid var(--accent); color: var(--accent); font-size: 3rem; width: 120px; text-align: center; font-weight: bold; outline: none; margin-bottom: 25px; }
+        
+        button { width: 100%; padding: 18px; background: var(--accent); color: white; border: none; border-radius: 50px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:active { transform: scale(0.96); }
 
-        /* 輸出優化 */
-        #result-area { margin-top: 25px; background: #1a1a1a; border-radius: 20px; max-height: 250px; overflow-y: auto; text-align: left; border: 1px solid #333; }
+        #result-list { margin-top: 25px; background: #1a1a1a; border-radius: 20px; max-height: 250px; overflow-y: auto; text-align: left; border: 1px solid #333; }
         .sol-card { padding: 15px; border-bottom: 1px solid #2a2a2a; }
         .sol-clean { color: var(--green); font-size: 1.3rem; font-weight: 600; display: block; }
         .sol-path { color: #555; font-size: 0.7rem; font-family: monospace; display: block; margin-top: 5px; }
@@ -49,110 +39,110 @@
 <body>
 
 <div class="container">
-    <h1 style="color:var(--accent); margin:0 0 20px 0;">🎲 Dice Solver</h1>
+    <h1 style="color:var(--accent); margin:0 0 20px 0;">🎲 Dice Solver Pro</h1>
 
     <div class="settings">
-        <div class="setting-item"><span>骰子數量</span><select id="n-select" onchange="refreshView()"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option></select></div>
-        <div class="setting-item"><span>解法數量</span><select id="sol-limit"><option value="1">1 種</option><option value="5" selected>5 種</option><option value="999">全部</option></select></div>
+        <div class="setting-item"><span>數量</span><select id="n-select" onchange="refresh()"><option>3</option><option>4</option><option selected>5</option><option>6</option></select></div>
+        <div class="setting-item"><span>顯示上限</span><select id="limit-select"><option value="5">5 種</option><option value="10">10 種</option><option value="999">不限</option></select></div>
     </div>
 
-    <div id="input-area">
-        <div class="dice-wrap" id="w-0"><input type="number" class="dice-input" value="1"></div>
-        <div class="dice-wrap" id="w-1"><input type="number" class="dice-input" value="2"></div>
-        <div class="dice-wrap" id="w-2"><input type="number" class="dice-input" value="3"></div>
-        <div class="dice-wrap" id="w-3"><input type="number" class="dice-input" value="4"></div>
-        <div class="dice-wrap" id="w-4"><input type="number" class="dice-input" value="5"></div>
-        <div class="dice-wrap" id="w-5"><input type="number" class="dice-input" value="1"></div>
-        <div class="dice-wrap" id="w-6"><input type="number" class="dice-input" value="2"></div>
-        <div class="dice-wrap" id="w-7"><input type="number" class="dice-input" value="3"></div>
+    <div id="dice-area">
+        <div class="dice-wrap" id="w0"><input type="number" class="dice-input" value="1"></div>
+        <div class="dice-wrap" id="w1"><input type="number" class="dice-input" value="2"></div>
+        <div class="dice-wrap" id="w2"><input type="number" class="dice-input" value="3"></div>
+        <div class="dice-wrap" id="w3"><input type="number" class="dice-input" value="4"></div>
+        <div class="dice-wrap" id="w4"><input type="number" class="dice-input" value="5"></div>
+        <div class="dice-wrap" id="w5"><input type="number" class="dice-input" value="6"></div>
     </div>
 
-    <div class="target-section">
-        <input type="number" id="target" value="24">
-    </div>
-
+    <input type="number" id="target" value="24">
     <button onclick="crack()">SOLVE NOW</button>
-
-    <div id="result-area"><div style="color:#444; padding:20px; text-align:center;">等待計算...</div></div>
+    <div id="result-list"><div style="color:#444; padding:20px; text-align:center;">等待輸入...</div></div>
 </div>
 
 <script>
-    function refreshView() {
+    function refresh() {
         const n = parseInt(document.getElementById('n-select').value);
-        for(let i=0; i<8; i++) {
-            document.getElementById('w-' + i).style.display = (i < n) ? 'block' : 'none';
-        }
+        for(let i=0; i<6; i++) document.getElementById('w'+i).style.display = (i < n) ? 'block' : 'none';
     }
 
-    let results = new Set();
-    let limit = 5;
+    let found = new Map(); // 使用 Map 存儲「規範化算式」作為 Key 來去重
+    let max;
+
+    // 規範化函數：處理交換律 (A+B -> B+A)
+    function normalize(expr) {
+        // 這是一個簡化的邏輯：移除括號並排序內容來判斷邏輯是否一致
+        return expr.replace(/\(|\)/g, '').split('').sort().join('');
+    }
 
     function solve(items, target) {
-        if (results.size >= limit) return;
+        if (found.size >= max) return;
         if (items.length === 1) {
-            if (Math.abs(items[0].v - target) < 0.001) results.add(items[0].e);
+            if (Math.abs(items[0].v - target) < 0.001) {
+                const norm = normalize(items[0].e);
+                if (!found.has(norm)) found.set(norm, items[0].e);
+            }
             return;
         }
         for (let i = 0; i < items.length; i++) {
             for (let j = 0; j < items.length; j++) {
                 if (i === j) continue;
                 const a = items[i], b = items[j], rem = items.filter((_, idx) => idx !== i && idx !== j);
-                const ops = [{o:'+',v:a.v+b.v},{o:'-',v:a.v-b.v},{o:'*',v:a.v*b.v}];
-                if(b.v !== 0) ops.push({o:'/',v:a.v/b.v});
+                const ops = [
+                    {o:'+', v:a.v+b.v},
+                    {o:'*', v:a.v*b.v},
+                    {o:'-', v:a.v-b.v},
+                    {o:'/', v:b.v!==0 ? a.v/b.v : null}
+                ];
                 for (let o of ops) {
-                    solve([...rem, {v:o.v, e:`(${a.e}${o.o}${b.e})`}], target);
+                    if (o.v !== null) solve([...rem, {v:o.v, e:`(${a.e}${o.o}${b.e})`}], target);
                 }
             }
         }
     }
 
-    // 優化輸出：只移除最外層括號與替換符號
-    function pretty(expr) {
-        let s = expr;
+    function pretty(s) {
         if (s.startsWith('(') && s.endsWith(')')) {
-            let b = 0, isO = true;
+            let b = 0, outer = true;
             for (let i = 0; i < s.length - 1; i++) {
                 if (s[i] === '(') b++; if (s[i] === ')') b--;
-                if (b === 0) { isO = false; break; }
+                if (b === 0) { outer = false; break; }
             }
-            if (isO) s = s.substring(1, s.length - 1);
+            if (outer) s = s.substring(1, s.length - 1);
         }
         return s.replace(/\*/g,' × ').replace(/\//g,' ÷ ').replace(/\+/g,' + ').replace(/\-/g,' - ');
     }
 
     function crack() {
-        results.clear();
+        found.clear();
         const n = parseInt(document.getElementById('n-select').value);
-        limit = parseInt(document.getElementById('sol-limit').value);
-        const target = parseFloat(document.getElementById('target').value);
+        max = parseInt(document.getElementById('limit-select').value);
+        const tar = parseFloat(document.getElementById('target').value);
         const nums = [];
-        const inputs = document.querySelectorAll('.dice-input');
-        
         for(let i=0; i<n; i++) {
-            const v = parseFloat(inputs[i].value) || 0;
+            const v = parseFloat(document.querySelectorAll('.dice-input')[i].value) || 0;
             nums.push({v: v, e: v.toString()});
         }
 
-        const resArea = document.getElementById('result-area');
-        resArea.innerHTML = "<div style='color:#888; padding:20px; text-align:center;'>計算中...</div>";
+        const resDiv = document.getElementById('result-list');
+        resDiv.innerHTML = "<div style='color:#888; padding:20px; text-align:center;'>計算中...</div>";
         
         setTimeout(() => {
-            solve(nums, target);
-            resArea.innerHTML = "";
-            if (results.size > 0) {
-                results.forEach(r => {
+            solve(nums, tar);
+            resDiv.innerHTML = "";
+            if (found.size > 0) {
+                found.forEach((expr) => {
                     const card = document.createElement('div');
                     card.className = 'sol-card';
-                    card.innerHTML = `<span class="sol-clean">${pretty(r)} = ${target}</span><span class="sol-path">${r}</span>`;
-                    resArea.appendChild(card);
+                    card.innerHTML = `<span class="sol-clean">${pretty(expr)} = ${tar}</span><span class="sol-path">${expr}</span>`;
+                    resDiv.appendChild(card);
                 });
             } else {
-                resArea.innerHTML = "<div style='color:#ff4757; padding:20px; text-align:center;'>無解</div>";
+                resDiv.innerHTML = "<div style='color:#ff4757; padding:20px; text-align:center;'>無解</div>";
             }
         }, 50);
     }
-
-    refreshView(); // 初始化
+    refresh();
 </script>
 </body>
 </html>
