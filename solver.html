@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>數學遊戲破解工具</title>
+    <style>
+        body { font-family: sans-serif; background: #2c3e50; color: white; text-align: center; padding: 40px; }
+        .box { background: #34495e; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 50px; height: 40px; font-size: 1.2rem; text-align: center; margin: 5px; border-radius: 5px; border: none; }
+        #target { width: 80px; background: #e74c3c; color: white; font-weight: bold; }
+        button { padding: 10px 30px; font-size: 1.1rem; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; margin-top: 20px; }
+        button:hover { background: #2ecc71; }
+        #result { margin-top: 30px; font-size: 1.5rem; color: #f1c40f; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>輸入骰子點數 (n=5)</h2>
+    <div>
+        <input type="number" id="n1" value="1" min="1" max="99">
+        <input type="number" id="n2" value="2" min="1" max="99">
+        <input type="number" id="n3" value="3" min="1" max="99">
+        <input type="number" id="n4" value="4" min="1" max="99">
+        <input type="number" id="n5" value="5" min="1" max="99">
+    </div>
+    <h2>目標數字 X</h2>
+    <input type="number" id="target" value="24">
+    <br>
+    <button onclick="crack()">立即計算答案</button>
+    <div id="result"></div>
+</div>
+
+<script>
+    function crack() {
+        const nums = [
+            parseFloat(document.getElementById('n1').value),
+            parseFloat(document.getElementById('n2').value),
+            parseFloat(document.getElementById('n3').value),
+            parseFloat(document.getElementById('n4').value),
+            parseFloat(document.getElementById('n5').value)
+        ];
+        const target = parseFloat(document.getElementById('target').value);
+        const display = document.getElementById('result');
+
+        display.innerText = "計算中...";
+
+        // 將數字包裝成物件格式進行遞迴
+        const inputData = nums.map(n => ({ val: n, expr: n.toString() }));
+        const solution = solve(inputData, target);
+
+        if (solution) {
+            display.innerHTML = "找到解法了：<br><br>" + solution;
+        } else {
+            display.innerText = "這組數字在嚴格規則下（必用五次）無解。";
+        }
+    }
+
+    function solve(items, target) {
+        if (items.length === 1) {
+            return Math.abs(items[0].val - target) < 0.0001 ? items[0].expr : null;
+        }
+
+        for (let i = 0; i < items.length; i++) {
+            for (let j = 0; j < items.length; j++) {
+                if (i === j) continue;
+
+                const remaining = items.filter((_, idx) => idx !== i && idx !== j);
+                const a = items[i], b = items[j];
+
+                const ops = [
+                    { val: a.val + b.val, expr: `(${a.expr}+${b.expr})` },
+                    { val: a.val - b.val, expr: `(${a.expr}-${b.expr})` },
+                    { val: a.val * b.val, expr: `(${a.expr}*${b.expr})` }
+                ];
+                if (Math.abs(b.val) > 0.0001) {
+                    ops.push({ val: a.val / b.val, expr: `(${a.expr}/${b.expr})` });
+                }
+
+                for (let op of ops) {
+                    const res = solve([...remaining, op], target);
+                    if (res) return res;
+                }
+            }
+        }
+        return null;
+    }
+</script>
+
+</body>
+</html>
